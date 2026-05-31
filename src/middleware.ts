@@ -4,15 +4,31 @@ import type { NextRequest } from 'next/server'
 import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
 
-const ratelimit = new Ratelimit({
-  redis: Redis.fromEnv(),
-  limiter: Ratelimit.slidingWindow(60, '60 s'),
-})
+let ratelimit: Ratelimit | null = null
+let authRatelimit: Ratelimit | null = null
 
-const authRatelimit = new Ratelimit({
-  redis: Redis.fromEnv(),
-  limiter: Ratelimit.slidingWindow(10, '60 s'),
-})
+const upstashUrl = process.env.UPSTASH_REDIS_REST_URL
+if (upstashUrl && upstashUrl !== 'placeholder') {
+  try {
+    const redis = Redis.fromEnv()
+    ratelimit = new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(60, '60 s'),
+    })
+    authRatelimit = new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(10, '60 s'),
+    })
+  } catch {
+    ratelimit = null
+    authRatelimit = null
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Rate limiting disabled: Upstash not configured')
+    }
+  }
+} else if (process.env.NODE_ENV === 'development') {
+  console.warn('Rate limiting disabled: Upstash not configured')
+}
 
 const PROTECTED = ['/dashboard', '/competition', '/checkin', '/meals', '/protocol', '/photos', '/settings']
 const AUTH_ROUTES = ['/login', '/signup']
@@ -32,12 +48,20 @@ export async function middleware(request: NextRequest) {
     `default-src 'self'; script-src ${scriptSrc}; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co; connect-src 'self' https://*.supabase.co https://api.stripe.com; frame-ancestors 'none';`)
   response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload')
 
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '127.0.0.1'
-  const isAuth = request.nextUrl.pathname.startsWith('/api/auth')
-  const limiter = isAuth ? authRatelimit : ratelimit
-  const { success } = await limiter.limit(ip)
-  if (!success) {
-    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  if (ratelimit && authRatelimit) {
+    try {
+      const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? '127.0.0.1'
+      const isAuth = request.nextUrl.pathname.startsWith('/api/auth')
+      const limiter = isAuth ? authRatelimit : ratelimit
+      const { success } = await limiter.limit(ip)
+      if (!success) {
+        return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+      }
+    } catch (err) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Rate limiting disabled: Upstash error', err)
+      }
+    }
   }
 
   const supabase = createServerClient(

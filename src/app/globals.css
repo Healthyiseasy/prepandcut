@@ -1,23 +1,55 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-html { background-color: #08080D; color-scheme: dark; }
-body { background-color: #08080D; color: #F0ECE4; min-height: 100dvh; }
+@theme {
+  --color-void: #08080D;
+  --color-surface: #131318;
+  --color-card: #1C1C24;
+  --color-elevated: #2A2A34;
+  --color-border: #3A3A44;
+  --color-gold: #D4A24E;
+  --color-gold-light: #F5C66A;
+  --color-gold-deep: #A67C35;
+  --color-cyan: #4EC9D4;
+  --color-cyan-deep: #2D6E8A;
+  --color-success: #1B6B42;
+  --color-warning: #D4A24E;
+  --color-danger: #C43E3E;
+  --color-text-primary: #F0ECE4;
+  --color-text-secondary: #B0ADA5;
+  --color-text-muted: #8A877E;
+  --color-text-disabled: #5E5C56;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+html {
+  background-color: var(--color-void);
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--color-void);
+  color: var(--color-text-primary);
+  min-height: 100dvh;
+}
 
 @layer base {
-  * { border-color: #3A3A44; }
+  * {
+    border-color: var(--color-border);
+  }
   input, select, textarea {
-    background-color: #1C1C24;
-    color: #F0ECE4;
-    border: 1px solid #3A3A44;
+    background-color: var(--color-card);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border);
     border-radius: 0.5rem;
     padding: 0.625rem 0.75rem;
+    width: 100%;
   }
   input:focus, select:focus, textarea:focus {
     outline: none;
-    border-color: #D4A24E;
-    box-shadow: 0 0 0 1px #D4A24E;
+    border-color: var(--color-gold);
+    box-shadow: 0 0 0 1px var(--color-gold);
   }
-  input::placeholder { color: #5E5C56; }
+  input::placeholder {
+    color: var(--color-text-disabled);
+  }
 }

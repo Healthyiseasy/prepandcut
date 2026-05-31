@@ -1,26 +1,42 @@
 'use client'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
 
 export default function OnboardingPage() {
   const [accepted, setAccepted] = useState(false)
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
+  const [error, setError] = useState<string | null>(null)
 
   async function handleAccept() {
     if (!accepted) return
     setLoading(true)
+    setError(null)
+
     const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    await supabase.from('profiles').update({
-      has_accepted_disclaimer: true,
-      disclaimer_accepted_at: new Date().toISOString(),
-    }).eq('id', user.id)
+    if (authError || !user) {
+      setError('Not authenticated. Please sign in again.')
+      setLoading(false)
+      return
+    }
 
-    router.push('/dashboard')
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        has_accepted_disclaimer: true,
+        disclaimer_accepted_at: new Date().toISOString(),
+      })
+      .eq('id', user.id)
+
+    if (updateError) {
+      setError('Failed to save: ' + updateError.message)
+      setLoading(false)
+      return
+    }
+
+    // Full page reload forces server layout to re-check profile
+    window.location.href = '/dashboard'
   }
 
   return (
@@ -28,7 +44,7 @@ export default function OnboardingPage() {
       <div className="w-full max-w-lg">
         <h1 className="text-2xl font-bold text-text-primary mb-2">Before you continue</h1>
         <p className="text-text-secondary text-sm mb-6">Please read and accept the following disclaimer to use PrepAndCut.</p>
-        
+
         <div className="bg-surface border border-border rounded-xl p-5 mb-6 max-h-64 overflow-y-auto text-sm text-text-secondary leading-relaxed space-y-3">
           <p>PrepAndCut provides general information for competition preparation. It is <strong className="text-text-primary">not medical advice</strong>.</p>
           <p>Weight cutting carries inherent risks including dehydration, impaired performance, and in extreme cases, serious health consequences. By using this app, you acknowledge and accept these risks.</p>
@@ -45,9 +61,11 @@ export default function OnboardingPage() {
           </span>
         </label>
 
+        {error && <p className="text-sm text-danger mb-4">{error}</p>}
+
         <button onClick={handleAccept} disabled={!accepted || loading}
           className="w-full py-2.5 rounded-lg bg-gold text-void font-semibold hover:bg-gold-light transition disabled:opacity-30 disabled:cursor-not-allowed">
-          {loading ? 'Continuing...' : 'Accept & continue'}
+          {loading ? 'Saving...' : 'Accept & continue'}
         </button>
       </div>
     </div>
