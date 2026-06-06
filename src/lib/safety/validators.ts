@@ -43,6 +43,19 @@ export const checkinSchema = z.object({
   notes: z.string().max(2000).optional(),
 })
 
+export const mealSchema = z.object({
+  meal_date: z.string().date(),
+  name: z.string().min(1).max(200).trim(),
+  meal_type: z
+    .enum(['breakfast', 'lunch', 'dinner', 'snack', 'pre_workout', 'post_workout'])
+    .optional(),
+  calories: z.number().int().min(0).max(10000).optional(),
+  protein_g: z.number().min(0).max(1000).optional(),
+  carbs_g: z.number().min(0).max(1000).optional(),
+  fat_g: z.number().min(0).max(500).optional(),
+  notes: z.string().max(2000).optional(),
+})
+
 export const profileSchema = z.object({
   full_name: z.string().min(1).max(200).trim(),
   gender: z.enum(['male', 'female']).optional(),
