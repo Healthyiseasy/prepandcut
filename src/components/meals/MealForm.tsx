@@ -28,9 +28,9 @@ export default function MealForm({ defaultDate }: { defaultDate: string }) {
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-sm text-text-secondary mb-1">Date</label>
-          <input name="meal_date" type="date" required defaultValue={defaultDate} />
-          {fieldError('meal_date') && (
-            <p className="text-xs text-danger mt-1">{fieldError('meal_date')}</p>
+          <input name="plan_date" type="date" required defaultValue={defaultDate} />
+          {fieldError('plan_date') && (
+            <p className="text-xs text-danger mt-1">{fieldError('plan_date')}</p>
           )}
         </div>
         <div>
@@ -42,6 +42,9 @@ export default function MealForm({ defaultDate }: { defaultDate: string }) {
               </option>
             ))}
           </select>
+          {fieldError('meal_type') && (
+            <p className="text-xs text-danger mt-1">{fieldError('meal_type')}</p>
+          )}
         </div>
       </div>
 
@@ -56,27 +59,20 @@ export default function MealForm({ defaultDate }: { defaultDate: string }) {
       <div className="grid grid-cols-4 gap-2">
         <div>
           <label className="block text-sm text-text-secondary mb-1">Cal</label>
-          <input name="calories" type="number" />
+          <input name="calories" type="number" min="0" defaultValue={0} />
         </div>
         <div>
           <label className="block text-sm text-text-secondary mb-1">P (g)</label>
-          <input name="protein_g" type="number" step="0.1" />
+          <input name="protein_g" type="number" step="0.1" min="0" defaultValue={0} />
         </div>
         <div>
           <label className="block text-sm text-text-secondary mb-1">C (g)</label>
-          <input name="carbs_g" type="number" step="0.1" />
+          <input name="carbs_g" type="number" step="0.1" min="0" defaultValue={0} />
         </div>
         <div>
           <label className="block text-sm text-text-secondary mb-1">F (g)</label>
-          <input name="fat_g" type="number" step="0.1" />
+          <input name="fat_g" type="number" step="0.1" min="0" defaultValue={0} />
         </div>
-      </div>
-
-      <div>
-        <label className="block text-sm text-text-secondary mb-1">
-          Notes <span className="text-text-disabled">(optional)</span>
-        </label>
-        <input name="notes" type="text" placeholder="prep, timing, etc." />
       </div>
 
       {state.error && <p className="text-sm text-danger">{state.error}</p>}

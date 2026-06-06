@@ -42,7 +42,7 @@ export default async function DashboardPage() {
   const nextComp = next as NextCompetition | null
 
   const { data: checkin } = await supabase
-    .from('checkins')
+    .from('daily_checkins')
     .select('morning_weight_lbs, evening_weight_lbs, water_intake_oz')
     .eq('user_id', user?.id ?? '')
     .eq('checkin_date', today)

@@ -1,25 +1,20 @@
 import { createClient } from '@/lib/supabase/server'
 import MealForm from '@/components/meals/MealForm'
-import { mealTypeLabel, MEAL_TYPE_ORDER } from '@/lib/constants/meal-options'
+import {
+  mealTypeLabel,
+  MEAL_TYPE_ORDER,
+  type MealEntry,
+} from '@/lib/constants/meal-options'
 import { deleteMeal } from './actions'
 
-interface MealRow {
+interface PlanRow {
   id: string
-  meal_date: string
-  name: string
-  meal_type: string | null
-  calories: number | null
-  protein_g: number | null
-  carbs_g: number | null
-  fat_g: number | null
-  notes: string | null
-}
-
-interface DayTotals {
-  calories: number
-  protein_g: number
-  carbs_g: number
-  fat_g: number
+  plan_date: string
+  meals: MealEntry[] | null
+  target_calories: number
+  target_protein_g: number
+  target_carbs_g: number
+  target_fat_g: number
 }
 
 function formatDate(value: string): string {
@@ -28,10 +23,6 @@ function formatDate(value: string): string {
     month: 'short',
     day: 'numeric',
   })
-}
-
-function emptyTotals(): DayTotals {
-  return { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 }
 }
 
 export default async function MealsPage() {
@@ -43,95 +34,105 @@ export default async function MealsPage() {
   const today = new Date().toISOString().split('T')[0]
 
   const { data } = await supabase
-    .from('meals')
+    .from('meal_plans')
     .select(
-      'id, meal_date, name, meal_type, calories, protein_g, carbs_g, fat_g, notes'
+      'id, plan_date, meals, target_calories, target_protein_g, target_carbs_g, target_fat_g'
     )
     .eq('user_id', user?.id ?? '')
-    .order('meal_date', { ascending: false })
+    .eq('plan_date', today)
+    .maybeSingle()
 
-  const meals = (data ?? []) as MealRow[]
+  const plan = data as PlanRow | null
 
-  const byDate = new Map<string, MealRow[]>()
-  for (const meal of meals) {
-    const list = byDate.get(meal.meal_date) ?? []
-    list.push(meal)
-    byDate.set(meal.meal_date, list)
-  }
+  const meals = [...(plan?.meals ?? [])].sort((a, b) => {
+    const oa = MEAL_TYPE_ORDER[a.meal_type] ?? 99
+    const ob = MEAL_TYPE_ORDER[b.meal_type] ?? 99
+    return oa - ob
+  })
 
-  const days = Array.from(byDate.entries()).map(([date, dayMeals]) => {
-    const sorted = [...dayMeals].sort((a, b) => {
-      const oa = a.meal_type ? MEAL_TYPE_ORDER[a.meal_type] ?? 99 : 99
-      const ob = b.meal_type ? MEAL_TYPE_ORDER[b.meal_type] ?? 99 : 99
-      return oa - ob
-    })
-    const totals = sorted.reduce<DayTotals>((acc, m) => {
+  const totals = meals.reduce(
+    (acc, m) => {
       acc.calories += m.calories ?? 0
       acc.protein_g += m.protein_g ?? 0
       acc.carbs_g += m.carbs_g ?? 0
       acc.fat_g += m.fat_g ?? 0
       return acc
-    }, emptyTotals())
-    return { date, meals: sorted, totals }
-  })
+    },
+    { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0 }
+  )
+
+  const targets = {
+    calories: plan?.target_calories ?? null,
+    protein_g: plan?.target_protein_g ?? null,
+    carbs_g: plan?.target_carbs_g ?? null,
+    fat_g: plan?.target_fat_g ?? null,
+  }
+
+  const macroRows: { label: string; total: number; target: number | null }[] = [
+    { label: 'Calories', total: totals.calories, target: targets.calories },
+    { label: 'Protein (g)', total: totals.protein_g, target: targets.protein_g },
+    { label: 'Carbs (g)', total: totals.carbs_g, target: targets.carbs_g },
+    { label: 'Fat (g)', total: totals.fat_g, target: targets.fat_g },
+  ]
 
   return (
     <div>
       <h1 className="text-xl font-bold mb-1">Meals</h1>
-      <p className="text-text-muted text-sm mb-6">Log meals and track daily macros</p>
+      <p className="text-text-muted text-sm mb-6">{formatDate(today)}</p>
 
       <MealForm defaultDate={today} />
 
-      {days.length > 0 && (
-        <div className="mt-8 space-y-6">
-          {days.map((day) => (
-            <div key={day.date}>
-              <div className="flex items-center justify-between mb-2">
-                <h2 className="text-sm font-semibold text-text-primary">
-                  {formatDate(day.date)}
-                </h2>
+      {meals.length > 0 && (
+        <>
+          <div className="mt-8 grid grid-cols-4 gap-3">
+            {macroRows.map((row) => (
+              <div
+                key={row.label}
+                className="bg-surface border border-border rounded-xl p-3 text-center"
+              >
+                <p className="text-text-muted text-xs uppercase tracking-wide mb-1">
+                  {row.label}
+                </p>
+                <p className="text-lg font-semibold text-text-primary">
+                  {Math.round(row.total)}
+                </p>
                 <p className="text-xs text-text-muted">
-                  {Math.round(day.totals.calories)} cal · {Math.round(day.totals.protein_g)}P ·{' '}
-                  {Math.round(day.totals.carbs_g)}C · {Math.round(day.totals.fat_g)}F
+                  {row.target != null ? `/ ${Math.round(row.target)}` : '—'}
                 </p>
               </div>
-              <div className="space-y-2">
-                {day.meals.map((m) => (
-                  <div
-                    key={m.id}
-                    className="bg-surface border border-border rounded-lg px-4 py-3 flex items-start justify-between gap-3"
+            ))}
+          </div>
+
+          <div className="mt-6 space-y-2">
+            {meals.map((m) => (
+              <div
+                key={m.id}
+                className="bg-surface border border-border rounded-lg px-4 py-3 flex items-start justify-between gap-3"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm text-text-primary">
+                    <span className="text-gold">{mealTypeLabel(m.meal_type)}</span>
+                    {' · '}
+                    {m.name}
+                  </p>
+                  <p className="text-xs text-text-muted mt-0.5">
+                    {m.calories} cal · {m.protein_g}P · {m.carbs_g}C · {m.fat_g}F
+                  </p>
+                </div>
+                <form action={deleteMeal}>
+                  <input type="hidden" name="plan_date" value={today} />
+                  <input type="hidden" name="meal_id" value={m.id} />
+                  <button
+                    type="submit"
+                    className="text-xs text-text-muted hover:text-danger transition"
                   >
-                    <div className="min-w-0">
-                      <p className="text-sm text-text-primary">
-                        <span className="text-gold">{mealTypeLabel(m.meal_type)}</span>
-                        {' · '}
-                        {m.name}
-                      </p>
-                      <p className="text-xs text-text-muted mt-0.5">
-                        {m.calories != null ? `${m.calories} cal` : '—'}
-                        {m.protein_g != null ? ` · ${m.protein_g}P` : ''}
-                        {m.carbs_g != null ? ` · ${m.carbs_g}C` : ''}
-                        {m.fat_g != null ? ` · ${m.fat_g}F` : ''}
-                      </p>
-                      {m.notes && (
-                        <p className="text-xs text-text-disabled mt-0.5">{m.notes}</p>
-                      )}
-                    </div>
-                    <form action={deleteMeal}>
-                      <input type="hidden" name="id" value={m.id} />
-                      <button
-                        type="submit"
-                        className="text-xs text-text-muted hover:text-danger transition"
-                      >
-                        Delete
-                      </button>
-                    </form>
-                  </div>
-                ))}
+                    Delete
+                  </button>
+                </form>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   )

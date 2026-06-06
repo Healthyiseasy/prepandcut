@@ -1,16 +1,16 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useEffect, useState } from 'react'
 import { saveCheckin, type CheckinFormState } from '@/app/(app)/checkin/actions'
 
 export interface CheckinValues {
-  checkin_date: string
   morning_weight_lbs?: number | null
   evening_weight_lbs?: number | null
   calories_consumed?: number | null
   protein_g?: number | null
   carbs_g?: number | null
   fat_g?: number | null
+  fiber_g?: number | null
   water_intake_oz?: number | null
   sodium_mg?: number | null
   energy_level?: number | null
@@ -20,133 +20,305 @@ export interface CheckinValues {
   notes?: string | null
 }
 
-function val(v: number | string | null | undefined): string | number | undefined {
-  if (v === null || v === undefined) return undefined
-  return v
+interface Props {
+  todayDate: string
+  initial: CheckinValues
+  hasToday: boolean
+  yesterdayWeight: number | null
 }
 
-export default function CheckinForm({ initial }: { initial: CheckinValues }) {
+function nv(v: number | null | undefined): number | undefined {
+  return v == null ? undefined : v
+}
+
+function WeightChange({
+  current,
+  yesterday,
+}: {
+  current: number | null
+  yesterday: number | null
+}) {
+  if (current == null || yesterday == null || !Number.isFinite(current)) return null
+  const diff = current - yesterday
+  if (Math.abs(diff) < 0.05) {
+    return <p className="text-text-muted text-sm mt-2">No change from yesterday</p>
+  }
+  const down = diff < 0
+  const sign = down ? '' : '+'
+  return (
+    <p className={`text-sm mt-2 font-medium ${down ? 'text-cyan' : 'text-danger'}`}>
+      {sign}
+      {diff.toFixed(1)} lbs from yesterday
+    </p>
+  )
+}
+
+export default function CheckinForm({
+  todayDate,
+  initial,
+  hasToday,
+  yesterdayWeight,
+}: Props) {
   const [state, formAction, pending] = useActionState<CheckinFormState, FormData>(
     saveCheckin,
     {}
   )
 
-  const fieldError = (name: string) => state.fieldErrors?.[name]
+  const [mode, setMode] = useState<'form' | 'summary'>(hasToday ? 'summary' : 'form')
+  const [morningWeight, setMorningWeight] = useState<string>(
+    initial.morning_weight_lbs != null ? String(initial.morning_weight_lbs) : ''
+  )
+  const [savedWeight, setSavedWeight] = useState<number | null>(
+    hasToday ? initial.morning_weight_lbs ?? null : null
+  )
+  const [showDetails, setShowDetails] = useState(false)
+
+  useEffect(() => {
+    if (state.success) {
+      const w = Number(morningWeight)
+      setSavedWeight(
+        state.savedWeight ?? (Number.isFinite(w) && morningWeight !== '' ? w : null)
+      )
+      setMode('summary')
+    }
+  }, [state.success, state.savedWeight, morningWeight])
+
+  if (mode === 'summary') {
+    return (
+      <div className="bg-surface border border-border rounded-xl p-6 text-center">
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-success/20">
+          <svg
+            className="h-6 w-6 text-success"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
+        </div>
+        <p className="text-lg font-semibold text-text-primary">Check-in logged</p>
+        {savedWeight != null && (
+          <p className="text-3xl font-bold text-text-primary mt-2">
+            {savedWeight} lbs
+          </p>
+        )}
+        <div className="flex justify-center">
+          <WeightChange current={savedWeight} yesterday={yesterdayWeight} />
+        </div>
+        <button
+          onClick={() => setMode('form')}
+          className="mt-4 text-sm text-gold hover:text-gold-light transition"
+        >
+          Edit
+        </button>
+      </div>
+    )
+  }
 
   return (
     <form action={formAction} className="space-y-6">
-      <div>
-        <label className="block text-sm text-text-secondary mb-1">Date</label>
+      <input type="hidden" name="checkin_date" value={todayDate} />
+
+      <div className="bg-surface border border-border rounded-xl p-6 text-center">
+        <label className="block text-xs uppercase tracking-wide text-text-muted mb-3">
+          Morning weight (lbs)
+        </label>
         <input
-          name="checkin_date"
-          type="date"
+          name="morning_weight_lbs"
+          type="number"
+          step="0.1"
+          min="0"
           required
-          defaultValue={initial.checkin_date}
+          autoFocus
+          inputMode="decimal"
+          value={morningWeight}
+          onChange={(e) => setMorningWeight(e.target.value)}
+          placeholder={yesterdayWeight != null ? String(yesterdayWeight) : 'Weight'}
+          className="w-full bg-card text-3xl font-bold text-center"
         />
-        {fieldError('checkin_date') && (
-          <p className="text-xs text-danger mt-1">{fieldError('checkin_date')}</p>
+        <WeightChange
+          current={morningWeight === '' ? null : Number(morningWeight)}
+          yesterday={yesterdayWeight}
+        />
+      </div>
+
+      <div className="grid grid-cols-3 gap-3">
+        <div>
+          <label className="block text-xs text-text-secondary mb-1">Water (oz)</label>
+          <input
+            name="water_intake_oz"
+            type="number"
+            step="1"
+            min="0"
+            defaultValue={nv(initial.water_intake_oz)}
+            className="bg-card"
+          />
+        </div>
+        <div>
+          <label className="block text-xs text-text-secondary mb-1">Sleep (hrs)</label>
+          <input
+            name="sleep_hours"
+            type="number"
+            step="0.5"
+            min="0"
+            defaultValue={nv(initial.sleep_hours)}
+            className="bg-card"
+          />
+        </div>
+        <div>
+          <label className="block text-xs text-text-secondary mb-1">Energy 1–10</label>
+          <input
+            name="energy_level"
+            type="number"
+            min="1"
+            max="10"
+            defaultValue={nv(initial.energy_level)}
+            className="bg-card"
+          />
+        </div>
+      </div>
+
+      <div className="border border-border rounded-xl overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setShowDetails((s) => !s)}
+          className="w-full flex items-center justify-between px-4 py-3 text-sm text-text-secondary hover:text-text-primary transition"
+        >
+          <span>More details</span>
+          <span className="text-text-muted">{showDetails ? '−' : '+'}</span>
+        </button>
+
+        {showDetails && (
+          <div className="px-4 pb-4 space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs text-text-secondary mb-1">
+                  Sleep quality 1–10
+                </label>
+                <input
+                  name="sleep_quality"
+                  type="number"
+                  min="1"
+                  max="10"
+                  defaultValue={nv(initial.sleep_quality)}
+                  className="bg-card"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-text-secondary mb-1">
+                  Training 1–10
+                </label>
+                <input
+                  name="training_intensity"
+                  type="number"
+                  min="1"
+                  max="10"
+                  defaultValue={nv(initial.training_intensity)}
+                  className="bg-card"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-text-secondary mb-1">Calories</label>
+                <input
+                  name="calories_consumed"
+                  type="number"
+                  min="0"
+                  defaultValue={nv(initial.calories_consumed)}
+                  className="bg-card"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-text-secondary mb-1">Sodium (mg)</label>
+                <input
+                  name="sodium_mg"
+                  type="number"
+                  min="0"
+                  defaultValue={nv(initial.sodium_mg)}
+                  className="bg-card"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-text-secondary mb-1">Protein (g)</label>
+                <input
+                  name="protein_g"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  defaultValue={nv(initial.protein_g)}
+                  className="bg-card"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-text-secondary mb-1">Carbs (g)</label>
+                <input
+                  name="carbs_g"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  defaultValue={nv(initial.carbs_g)}
+                  className="bg-card"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-text-secondary mb-1">Fat (g)</label>
+                <input
+                  name="fat_g"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  defaultValue={nv(initial.fat_g)}
+                  className="bg-card"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-text-secondary mb-1">Fiber (g)</label>
+                <input
+                  name="fiber_g"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  defaultValue={nv(initial.fiber_g)}
+                  className="bg-card"
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-xs text-text-secondary mb-1">
+                  Evening weight (lbs)
+                </label>
+                <input
+                  name="evening_weight_lbs"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  defaultValue={nv(initial.evening_weight_lbs)}
+                  className="bg-card"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs text-text-secondary mb-1">Notes</label>
+              <textarea
+                name="notes"
+                rows={3}
+                defaultValue={initial.notes ?? undefined}
+                className="bg-card"
+              />
+            </div>
+          </div>
         )}
       </div>
 
-      <section>
-        <h2 className="text-xs uppercase tracking-wide text-text-muted mb-2">Weight</h2>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-sm text-text-secondary mb-1">Morning (lbs)</label>
-            <input
-              name="morning_weight_lbs"
-              type="number"
-              step="0.1"
-              defaultValue={val(initial.morning_weight_lbs)}
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-text-secondary mb-1">Evening (lbs)</label>
-            <input
-              name="evening_weight_lbs"
-              type="number"
-              step="0.1"
-              defaultValue={val(initial.evening_weight_lbs)}
-            />
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <h2 className="text-xs uppercase tracking-wide text-text-muted mb-2">Nutrition</h2>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-sm text-text-secondary mb-1">Calories</label>
-            <input
-              name="calories_consumed"
-              type="number"
-              defaultValue={val(initial.calories_consumed)}
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-text-secondary mb-1">Water (oz)</label>
-            <input
-              name="water_intake_oz"
-              type="number"
-              step="0.1"
-              defaultValue={val(initial.water_intake_oz)}
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-text-secondary mb-1">Protein (g)</label>
-            <input name="protein_g" type="number" step="0.1" defaultValue={val(initial.protein_g)} />
-          </div>
-          <div>
-            <label className="block text-sm text-text-secondary mb-1">Carbs (g)</label>
-            <input name="carbs_g" type="number" step="0.1" defaultValue={val(initial.carbs_g)} />
-          </div>
-          <div>
-            <label className="block text-sm text-text-secondary mb-1">Fat (g)</label>
-            <input name="fat_g" type="number" step="0.1" defaultValue={val(initial.fat_g)} />
-          </div>
-          <div>
-            <label className="block text-sm text-text-secondary mb-1">Sodium (mg)</label>
-            <input name="sodium_mg" type="number" defaultValue={val(initial.sodium_mg)} />
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <h2 className="text-xs uppercase tracking-wide text-text-muted mb-2">Recovery</h2>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-sm text-text-secondary mb-1">Energy (1–10)</label>
-            <input name="energy_level" type="number" min="1" max="10" defaultValue={val(initial.energy_level)} />
-          </div>
-          <div>
-            <label className="block text-sm text-text-secondary mb-1">Sleep (hours)</label>
-            <input name="sleep_hours" type="number" step="0.1" defaultValue={val(initial.sleep_hours)} />
-          </div>
-          <div>
-            <label className="block text-sm text-text-secondary mb-1">Sleep quality (1–10)</label>
-            <input name="sleep_quality" type="number" min="1" max="10" defaultValue={val(initial.sleep_quality)} />
-          </div>
-          <div>
-            <label className="block text-sm text-text-secondary mb-1">Training intensity (1–10)</label>
-            <input name="training_intensity" type="number" min="1" max="10" defaultValue={val(initial.training_intensity)} />
-          </div>
-        </div>
-      </section>
-
-      <div>
-        <label className="block text-sm text-text-secondary mb-1">Notes</label>
-        <textarea name="notes" rows={3} defaultValue={initial.notes ?? undefined} />
-      </div>
-
       {state.error && <p className="text-sm text-danger">{state.error}</p>}
-      {state.success && <p className="text-sm text-success">Check-in saved.</p>}
 
       <button
         type="submit"
         disabled={pending}
-        className="w-full py-2.5 rounded-lg bg-gold text-void font-semibold hover:bg-gold-light transition disabled:opacity-50"
+        className="w-full py-3 rounded-lg bg-gold text-void font-semibold hover:bg-gold-light transition disabled:opacity-50"
       >
-        {pending ? 'Saving...' : 'Save check-in'}
+        {pending ? 'Logging...' : 'Log check-in'}
       </button>
     </form>
   )

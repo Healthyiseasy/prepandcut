@@ -34,6 +34,7 @@ export const checkinSchema = z.object({
   protein_g: z.number().min(0).max(1000).optional(),
   carbs_g: z.number().min(0).max(1000).optional(),
   fat_g: z.number().min(0).max(500).optional(),
+  fiber_g: z.number().min(0).max(500).optional(),
   water_intake_oz: z.number().min(0).max(500).optional(),
   sodium_mg: z.number().int().min(0).max(20000).optional(),
   energy_level: z.number().int().min(1).max(10).optional(),
@@ -44,16 +45,13 @@ export const checkinSchema = z.object({
 })
 
 export const mealSchema = z.object({
-  meal_date: z.string().date(),
+  plan_date: z.string().date(),
   name: z.string().min(1).max(200).trim(),
-  meal_type: z
-    .enum(['breakfast', 'lunch', 'dinner', 'snack', 'pre_workout', 'post_workout'])
-    .optional(),
-  calories: z.number().int().min(0).max(10000).optional(),
-  protein_g: z.number().min(0).max(1000).optional(),
-  carbs_g: z.number().min(0).max(1000).optional(),
-  fat_g: z.number().min(0).max(500).optional(),
-  notes: z.string().max(2000).optional(),
+  meal_type: z.enum(['breakfast', 'lunch', 'dinner', 'snack']),
+  calories: z.number().int().min(0).max(10000),
+  protein_g: z.number().min(0).max(1000),
+  carbs_g: z.number().min(0).max(1000),
+  fat_g: z.number().min(0).max(500),
 })
 
 export const profileSchema = z.object({

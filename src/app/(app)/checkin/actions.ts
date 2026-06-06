@@ -8,6 +8,7 @@ import { logAudit } from '@/lib/utils/audit'
 export interface CheckinFormState {
   error?: string
   success?: boolean
+  savedWeight?: number | null
   fieldErrors?: Record<string, string>
 }
 
@@ -35,6 +36,7 @@ export async function saveCheckin(
     protein_g: optionalNumber(formData.get('protein_g')),
     carbs_g: optionalNumber(formData.get('carbs_g')),
     fat_g: optionalNumber(formData.get('fat_g')),
+    fiber_g: optionalNumber(formData.get('fiber_g')),
     water_intake_oz: optionalNumber(formData.get('water_intake_oz')),
     sodium_mg: optionalNumber(formData.get('sodium_mg')),
     energy_level: optionalNumber(formData.get('energy_level')),
@@ -64,10 +66,20 @@ export async function saveCheckin(
     return { error: 'Not authenticated. Please sign in again.' }
   }
 
+  // Link the check-in to the athlete's active competition, if any.
+  const { data: comp } = await supabase
+    .from('competitions')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('is_active', true)
+    .order('competition_date', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+
   const { error: upsertError } = await supabase
-    .from('checkins')
+    .from('daily_checkins')
     .upsert(
-      { ...parsed.data, user_id: user.id },
+      { ...parsed.data, user_id: user.id, competition_id: comp?.id ?? null },
       { onConflict: 'user_id,checkin_date' }
     )
 
@@ -79,7 +91,7 @@ export async function saveCheckin(
     await logAudit({
       userId: user.id,
       action: 'save_checkin',
-      entityType: 'checkin',
+      entityType: 'daily_checkin',
       details: { checkin_date: parsed.data.checkin_date },
     })
   } catch {
@@ -88,5 +100,5 @@ export async function saveCheckin(
 
   revalidatePath('/checkin')
   revalidatePath('/dashboard')
-  return { success: true }
+  return { success: true, savedWeight: parsed.data.morning_weight_lbs ?? null }
 }

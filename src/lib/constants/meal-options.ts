@@ -3,11 +3,27 @@ export const MEAL_TYPES = [
   { value: 'lunch', label: 'Lunch' },
   { value: 'dinner', label: 'Dinner' },
   { value: 'snack', label: 'Snack' },
-  { value: 'pre_workout', label: 'Pre-workout' },
-  { value: 'post_workout', label: 'Post-workout' },
 ] as const
 
 export type MealType = (typeof MEAL_TYPES)[number]['value']
+
+export interface MealEntry {
+  id: string
+  name: string
+  meal_type: MealType
+  calories: number
+  protein_g: number
+  carbs_g: number
+  fat_g: number
+  source: string
+}
+
+export const DEFAULT_PLAN_TARGETS = {
+  target_calories: 2000,
+  target_protein_g: 150,
+  target_carbs_g: 200,
+  target_fat_g: 65,
+} as const
 
 const MEAL_TYPE_LABELS = Object.fromEntries(
   MEAL_TYPES.map((m) => [m.value, m.label])
