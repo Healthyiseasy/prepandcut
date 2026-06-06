@@ -1,6 +1,11 @@
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { AI_PRICING } from '@/lib/constants/ai-pricing'
 
+interface BudgetTotals {
+  daily_total: number
+  monthly_total: number
+}
+
 export class CostGuard {
   static async logUsage(record: {
     service: string; endpoint?: string;
@@ -20,7 +25,7 @@ export class CostGuard {
     const { data } = await supabaseAdmin
       .rpc('check_budget_totals', { p_service: service }).single()
     if (!data) return { allowed: true, usage_pct: 0 }
-    const { daily_total, monthly_total } = data
+    const { daily_total, monthly_total } = data as BudgetTotals
     const pct = Math.max(
       Math.round((daily_total / budget.daily_limit_cents) * 100),
       Math.round((monthly_total / budget.monthly_limit_cents) * 100)
