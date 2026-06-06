@@ -41,6 +41,22 @@ export default async function DashboardPage() {
 
   const nextComp = next as NextCompetition | null
 
+  const { data: checkin } = await supabase
+    .from('checkins')
+    .select('morning_weight_lbs, evening_weight_lbs, water_intake_oz')
+    .eq('user_id', user?.id ?? '')
+    .eq('checkin_date', today)
+    .maybeSingle()
+
+  const todaysCheckin = checkin as {
+    morning_weight_lbs: number | null
+    evening_weight_lbs: number | null
+    water_intake_oz: number | null
+  } | null
+
+  const currentWeight =
+    todaysCheckin?.evening_weight_lbs ?? todaysCheckin?.morning_weight_lbs ?? null
+
   return (
     <div>
       <h1 className="text-xl font-bold mb-1">Dashboard</h1>
@@ -81,17 +97,30 @@ export default async function DashboardPage() {
             </p>
           )}
         </div>
-        <div className="bg-surface rounded-xl p-4 border border-border">
+        <Link
+          href="/checkin"
+          className="bg-surface rounded-xl p-4 border border-border hover:border-gold/50 transition"
+        >
           <p className="text-text-muted text-xs uppercase tracking-wide mb-1">
             Today&apos;s check-in
           </p>
-          <p className="text-lg font-semibold text-danger">Not logged</p>
-        </div>
+          {todaysCheckin ? (
+            <p className="text-lg font-semibold text-success">
+              {currentWeight != null ? `${currentWeight} lbs` : 'Logged'}
+            </p>
+          ) : (
+            <p className="text-lg font-semibold text-danger">Not logged</p>
+          )}
+        </Link>
         <div className="bg-surface rounded-xl p-4 border border-border">
           <p className="text-text-muted text-xs uppercase tracking-wide mb-1">
             Water intake
           </p>
-          <p className="text-lg font-semibold text-text-primary">— oz</p>
+          <p className="text-lg font-semibold text-text-primary">
+            {todaysCheckin?.water_intake_oz != null
+              ? `${todaysCheckin.water_intake_oz} oz`
+              : '— oz'}
+          </p>
         </div>
       </div>
     </div>
