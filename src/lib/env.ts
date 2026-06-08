@@ -13,4 +13,5 @@ export const env = {
   upstashRedisUrl: requireEnv('UPSTASH_REDIS_REST_URL'),
   upstashRedisToken: requireEnv('UPSTASH_REDIS_REST_TOKEN'),
   appUrl: requireEnv('NEXT_PUBLIC_APP_URL'),
+  usdaApiKey: requireEnv('USDA_API_KEY'),
 } as const
