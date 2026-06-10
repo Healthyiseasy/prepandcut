@@ -7,6 +7,14 @@ import {
   weighinLabel,
 } from '@/lib/constants/competition-options'
 import { deleteCompetition } from './actions'
+import {
+  CARD_CLASS,
+  PAGE_SUBTITLE_CLASS,
+  PAGE_TITLE_CLASS,
+  PRIMARY_BUTTON_CLASS,
+  UPPER_LABEL_CLASS,
+  VALUE_TEXT_CLASS,
+} from '@/components/ui/classNames'
 
 interface CompetitionRow {
   id: string
@@ -22,9 +30,9 @@ interface CompetitionRow {
 }
 
 const SEVERITY_STYLES: Record<CutSeverity, string> = {
-  ok: 'bg-success/15 text-success border border-success/30',
-  warning: 'bg-warning/15 text-warning border border-warning/30',
-  danger: 'bg-danger/15 text-danger border border-danger/30',
+  ok: 'bg-success/15 text-success border-2 border-success/50',
+  warning: 'bg-warning/15 text-warning border-2 border-warning/50',
+  danger: 'bg-danger/15 text-danger border-2 border-danger/50',
 }
 
 function formatDate(value: string): string {
@@ -55,25 +63,25 @@ export default async function CompetitionPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold">Competitions</h1>
-          <p className="text-text-muted text-sm mt-1">
+          <h1 className={PAGE_TITLE_CLASS}>Competitions</h1>
+          <p className={`${PAGE_SUBTITLE_CLASS} mt-1 mb-0`}>
             Track your events and weight cuts
           </p>
         </div>
         <Link
           href="/competition/new"
-          className="px-4 py-2 rounded-lg bg-gold text-void font-semibold text-sm hover:bg-gold-light transition"
+          className={`${PRIMARY_BUTTON_CLASS} w-auto px-4 py-2.5`}
         >
           New
         </Link>
       </div>
 
       {competitions.length === 0 ? (
-        <div className="bg-surface border border-border rounded-xl p-8 text-center">
-          <p className="text-text-secondary mb-4">No competitions yet.</p>
+        <div className={`${CARD_CLASS} p-8 text-center`}>
+          <p className="text-text-secondary text-base font-medium mb-4">No competitions yet.</p>
           <Link
             href="/competition/new"
-            className="text-gold hover:text-gold-light font-medium"
+            className="text-gold hover:text-gold-light text-base font-semibold"
           >
             Add your first competition
           </Link>
@@ -90,21 +98,21 @@ export default async function CompetitionPage() {
             return (
               <div
                 key={c.id}
-                className="bg-surface border border-border rounded-xl p-4"
+                className={`${CARD_CLASS} p-4`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h2 className="font-semibold text-text-primary truncate">
+                    <h2 className={`${VALUE_TEXT_CLASS} truncate`}>
                       {c.name}
                     </h2>
-                    <p className="text-text-muted text-sm mt-0.5">
+                    <p className="text-text-secondary text-base font-medium mt-0.5">
                       {disciplineLabel(c.discipline)} ·{' '}
                       {organizationLabel(c.organization)}
                       {c.weight_class_name ? ` · ${c.weight_class_name}` : ''}
                     </p>
                   </div>
                   <span
-                    className={`shrink-0 px-2 py-0.5 rounded-md text-xs font-medium ${SEVERITY_STYLES[cut.severity]}`}
+                    className={`shrink-0 px-2 py-0.5 rounded-md text-sm font-semibold ${SEVERITY_STYLES[cut.severity]}`}
                   >
                     {cut.cutPercentage.toFixed(1)}% cut
                   </span>
@@ -112,32 +120,32 @@ export default async function CompetitionPage() {
 
                 <div className="grid grid-cols-3 gap-3 mt-4 text-sm">
                   <div>
-                    <p className="text-text-muted text-xs uppercase tracking-wide">
+                    <p className={UPPER_LABEL_CLASS}>
                       Competes
                     </p>
-                    <p className="text-text-primary">
+                    <p className="text-lg font-bold text-text-primary">
                       {formatDate(c.competition_date)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-text-muted text-xs uppercase tracking-wide">
+                    <p className={UPPER_LABEL_CLASS}>
                       Weigh-in
                     </p>
-                    <p className="text-text-primary">
+                    <p className="text-lg font-bold text-text-primary">
                       {formatDate(c.weighin_date)}
                     </p>
-                    <p className="text-text-muted text-xs">
+                    <p className="text-sm font-medium text-text-secondary">
                       {weighinLabel(c.weighin_type)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-text-muted text-xs uppercase tracking-wide">
+                    <p className={UPPER_LABEL_CLASS}>
                       Target
                     </p>
-                    <p className="text-text-primary">
+                    <p className="text-lg font-bold text-text-primary">
                       {c.target_weight_lbs} lbs
                     </p>
-                    <p className="text-text-muted text-xs">
+                    <p className="text-sm font-medium text-text-secondary">
                       from {c.starting_weight_lbs} lbs
                     </p>
                   </div>
@@ -148,7 +156,7 @@ export default async function CompetitionPage() {
                     <input type="hidden" name="id" value={c.id} />
                     <button
                       type="submit"
-                      className="text-xs text-text-muted hover:text-danger transition"
+                      className="text-sm font-semibold text-text-secondary hover:text-danger transition"
                     >
                       Delete
                     </button>

@@ -6,6 +6,13 @@ import {
   type MealEntry,
 } from '@/lib/constants/meal-options'
 import { deleteMeal } from './actions'
+import {
+  CARD_CLASS,
+  PAGE_SUBTITLE_CLASS,
+  PAGE_TITLE_CLASS,
+  UPPER_LABEL_CLASS,
+  VALUE_TEXT_CLASS,
+} from '@/components/ui/classNames'
 
 interface PlanRow {
   id: string
@@ -77,8 +84,8 @@ export default async function MealsPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold mb-1">Meals</h1>
-      <p className="text-text-muted text-sm mb-6">{formatDate(today)}</p>
+      <h1 className={PAGE_TITLE_CLASS}>Meals</h1>
+      <p className={`${PAGE_SUBTITLE_CLASS} mb-6`}>{formatDate(today)}</p>
 
       <MealForm defaultDate={today} />
 
@@ -88,15 +95,15 @@ export default async function MealsPage() {
             {macroRows.map((row) => (
               <div
                 key={row.label}
-                className="bg-surface border border-border rounded-xl p-3 text-center"
+                className={`${CARD_CLASS} p-3 text-center`}
               >
-                <p className="text-text-muted text-xs uppercase tracking-wide mb-1">
+                <p className={`${UPPER_LABEL_CLASS} mb-1`}>
                   {row.label}
                 </p>
-                <p className="text-lg font-semibold text-text-primary">
+                <p className={VALUE_TEXT_CLASS}>
                   {Math.round(row.total)}
                 </p>
-                <p className="text-xs text-text-muted">
+                <p className="text-sm font-semibold text-text-secondary">
                   {row.target != null ? `/ ${Math.round(row.target)}` : '—'}
                 </p>
               </div>
@@ -107,15 +114,15 @@ export default async function MealsPage() {
             {meals.map((m) => (
               <div
                 key={m.id}
-                className="bg-surface border border-border rounded-lg px-4 py-3 flex items-start justify-between gap-3"
+                className={`${CARD_CLASS} rounded-lg px-4 py-3 flex items-start justify-between gap-3`}
               >
                 <div className="min-w-0">
-                  <p className="text-sm text-text-primary">
+                  <p className="text-base font-bold text-text-primary">
                     <span className="text-gold">{mealTypeLabel(m.meal_type)}</span>
                     {' · '}
                     {m.name}
                   </p>
-                  <p className="text-xs text-text-muted mt-0.5">
+                  <p className="text-sm font-semibold text-text-secondary mt-0.5">
                     {m.calories} cal · {m.protein_g}P · {m.carbs_g}C · {m.fat_g}F
                   </p>
                 </div>
@@ -124,7 +131,7 @@ export default async function MealsPage() {
                   <input type="hidden" name="meal_id" value={m.id} />
                   <button
                     type="submit"
-                    className="text-xs text-text-muted hover:text-danger transition"
+                    className="text-sm font-semibold text-text-secondary hover:text-danger transition"
                   >
                     Delete
                   </button>

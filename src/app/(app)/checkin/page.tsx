@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import CheckinForm, { type CheckinValues } from '@/components/checkin/CheckinForm'
+import { PAGE_SUBTITLE_CLASS, PAGE_TITLE_CLASS } from '@/components/ui/classNames'
 
 interface CheckinRow {
   checkin_date: string
@@ -74,8 +75,8 @@ export default async function CheckinPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold mb-1">Daily check-in</h1>
-      <p className="text-text-muted text-sm mb-6">
+      <h1 className={PAGE_TITLE_CLASS}>Daily check-in</h1>
+      <p className={`${PAGE_SUBTITLE_CLASS} mb-6`}>
         {new Date(`${today}T00:00:00`).toLocaleDateString(undefined, {
           weekday: 'long',
           month: 'short',

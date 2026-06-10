@@ -2,6 +2,11 @@
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import {
+  NAV_LINK_ACTIVE_CLASS,
+  NAV_LINK_BASE_CLASS,
+  NAV_LINK_INACTIVE_CLASS,
+} from '@/components/ui/classNames'
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard' },
@@ -20,24 +25,24 @@ export default function AppNav({ userEmail }: { userEmail: string }) {
   }
 
   return (
-    <nav className="border-b border-border bg-surface sticky top-0 z-50">
+    <nav className="border-b-2 border-text-muted/40 bg-surface sticky top-0 z-50">
       <div className="max-w-2xl mx-auto px-4 flex items-center justify-between h-14">
         <div className="flex items-center gap-6">
           <Link href="/dashboard" className="text-gold font-bold text-lg">P&C</Link>
           <div className="flex gap-1">
             {navItems.map(item => (
               <Link key={item.href} href={item.href}
-                className={`px-3 py-1.5 rounded-md text-sm transition ${
+                className={`${NAV_LINK_BASE_CLASS} ${
                   pathname.startsWith(item.href)
-                    ? 'bg-card text-gold'
-                    : 'text-text-muted hover:text-text-primary'
+                    ? NAV_LINK_ACTIVE_CLASS
+                    : NAV_LINK_INACTIVE_CLASS
                 }`}>
                 {item.label}
               </Link>
             ))}
           </div>
         </div>
-        <button onClick={handleSignOut} className="text-sm text-text-muted hover:text-text-primary transition">
+        <button onClick={handleSignOut} className="text-base font-semibold text-text-secondary hover:text-text-primary transition">
           Sign out
         </button>
       </div>

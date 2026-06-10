@@ -10,6 +10,13 @@ import {
 } from '@/lib/constants/competition-options'
 import { analyzeCut, type CutSeverity } from '@/lib/safety/competition-checks'
 import { createCompetition, type CompetitionFormState } from '../actions'
+import {
+  CARD_CLASS,
+  FIELD_LABEL_CLASS,
+  PAGE_TITLE_CLASS,
+  PRIMARY_BUTTON_CLASS,
+  UPPER_LABEL_CLASS,
+} from '@/components/ui/classNames'
 
 const SEVERITY_TEXT: Record<CutSeverity, string> = {
   ok: 'text-success',
@@ -50,22 +57,22 @@ export default function NewCompetitionPage() {
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/competition" className="text-text-muted hover:text-text-primary text-sm">
+        <Link href="/competition" className="text-text-secondary hover:text-text-primary text-base font-semibold">
           ← Back
         </Link>
-        <h1 className="text-xl font-bold">New competition</h1>
+        <h1 className={PAGE_TITLE_CLASS}>New competition</h1>
       </div>
 
       <form action={formAction} className="space-y-4">
         <div>
-          <label className="block text-sm text-text-secondary mb-1">Name</label>
+          <label className={FIELD_LABEL_CLASS}>Name</label>
           <input name="name" type="text" required placeholder="e.g. Regional Open" />
           {fieldError('name') && <p className="text-xs text-danger mt-1">{fieldError('name')}</p>}
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm text-text-secondary mb-1">Discipline</label>
+            <label className={FIELD_LABEL_CLASS}>Discipline</label>
             <select
               name="discipline"
               value={discipline}
@@ -79,7 +86,7 @@ export default function NewCompetitionPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm text-text-secondary mb-1">Organization</label>
+            <label className={FIELD_LABEL_CLASS}>Organization</label>
             <select name="organization" defaultValue={orgs[0]?.value} key={discipline}>
               {orgs.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -94,7 +101,7 @@ export default function NewCompetitionPage() {
         </div>
 
         <div>
-          <label className="block text-sm text-text-secondary mb-1">Weigh-in type</label>
+          <label className={FIELD_LABEL_CLASS}>Weigh-in type</label>
           <select
             name="weighin_type"
             value={weighinType}
@@ -110,14 +117,14 @@ export default function NewCompetitionPage() {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm text-text-secondary mb-1">Competition date</label>
+            <label className={FIELD_LABEL_CLASS}>Competition date</label>
             <input name="competition_date" type="date" required />
             {fieldError('competition_date') && (
               <p className="text-xs text-danger mt-1">{fieldError('competition_date')}</p>
             )}
           </div>
           <div>
-            <label className="block text-sm text-text-secondary mb-1">Weigh-in date</label>
+            <label className={FIELD_LABEL_CLASS}>Weigh-in date</label>
             <input
               name="weighin_date"
               type="date"
@@ -133,7 +140,7 @@ export default function NewCompetitionPage() {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm text-text-secondary mb-1">Starting weight (lbs)</label>
+            <label className={FIELD_LABEL_CLASS}>Starting weight (lbs)</label>
             <input
               name="starting_weight_lbs"
               type="number"
@@ -147,7 +154,7 @@ export default function NewCompetitionPage() {
             )}
           </div>
           <div>
-            <label className="block text-sm text-text-secondary mb-1">Target weight (lbs)</label>
+            <label className={FIELD_LABEL_CLASS}>Target weight (lbs)</label>
             <input
               name="target_weight_lbs"
               type="number"
@@ -164,13 +171,13 @@ export default function NewCompetitionPage() {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm text-text-secondary mb-1">
+            <label className={FIELD_LABEL_CLASS}>
               Weight class <span className="text-text-disabled">(optional)</span>
             </label>
             <input name="weight_class_name" type="text" placeholder="e.g. Lightweight" />
           </div>
           <div>
-            <label className="block text-sm text-text-secondary mb-1">
+            <label className={FIELD_LABEL_CLASS}>
               Division <span className="text-text-disabled">(optional)</span>
             </label>
             <input name="division" type="text" placeholder="e.g. Adult / Blue belt" />
@@ -178,17 +185,17 @@ export default function NewCompetitionPage() {
         </div>
 
         {preview && (
-          <div className="bg-surface border border-border rounded-xl p-4">
-            <p className="text-xs uppercase tracking-wide text-text-muted mb-1">
+          <div className={`${CARD_CLASS} p-4`}>
+            <p className={`${UPPER_LABEL_CLASS} mb-1`}>
               Cut preview
             </p>
-            <p className={`text-sm font-medium ${SEVERITY_TEXT[preview.severity]}`}>
+            <p className={`text-base font-bold ${SEVERITY_TEXT[preview.severity]}`}>
               {preview.cutLbs.toFixed(1)} lbs ({preview.cutPercentage.toFixed(1)}%) over{' '}
               {preview.weeksUntilWeighin.toFixed(1)} weeks
             </p>
             <ul className="mt-2 space-y-1">
               {preview.messages.map((m, i) => (
-                <li key={i} className="text-xs text-text-secondary">
+                <li key={i} className="text-sm font-medium text-text-secondary">
                   {m}
                 </li>
               ))}
@@ -201,7 +208,7 @@ export default function NewCompetitionPage() {
         <button
           type="submit"
           disabled={pending}
-          className="w-full py-2.5 rounded-lg bg-gold text-void font-semibold hover:bg-gold-light transition disabled:opacity-50"
+          className={PRIMARY_BUTTON_CLASS}
         >
           {pending ? 'Saving...' : 'Save competition'}
         </button>

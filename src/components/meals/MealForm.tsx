@@ -1,8 +1,10 @@
 'use client'
 
-import { useActionState, useEffect, useRef } from 'react'
+import { useActionState, useEffect, useRef, useState } from 'react'
 import { MEAL_TYPES } from '@/lib/constants/meal-options'
 import { addMeal, type MealFormState } from '@/app/(app)/meals/actions'
+import FoodSearch from './FoodSearch'
+import { CARD_CLASS, FIELD_LABEL_CLASS, PRIMARY_BUTTON_CLASS } from '@/components/ui/classNames'
 
 export default function MealForm({ defaultDate }: { defaultDate: string }) {
   const [state, formAction, pending] = useActionState<MealFormState, FormData>(
@@ -10,31 +12,57 @@ export default function MealForm({ defaultDate }: { defaultDate: string }) {
     {}
   )
   const formRef = useRef<HTMLFormElement>(null)
+  const [name, setName] = useState('')
+  const [calories, setCalories] = useState('')
+  const [proteinG, setProteinG] = useState('')
+  const [carbsG, setCarbsG] = useState('')
+  const [fatG, setFatG] = useState('')
 
   useEffect(() => {
     if (state.success) {
       formRef.current?.reset()
+      setName('')
+      setCalories('')
+      setProteinG('')
+      setCarbsG('')
+      setFatG('')
     }
   }, [state.success])
 
-  const fieldError = (name: string) => state.fieldErrors?.[name]
+  function handleFoodSelect(food: {
+    name: string
+    calories: number
+    protein_g: number
+    carbs_g: number
+    fat_g: number
+  }) {
+    setName(food.name)
+    setCalories(String(food.calories))
+    setProteinG(String(food.protein_g))
+    setCarbsG(String(food.carbs_g))
+    setFatG(String(food.fat_g))
+  }
+
+  const fieldError = (field: string) => state.fieldErrors?.[field]
 
   return (
     <form
       ref={formRef}
       action={formAction}
-      className="bg-surface border border-border rounded-xl p-4 space-y-4"
+      className={`${CARD_CLASS} p-4 space-y-4`}
     >
+      <FoodSearch onSelect={handleFoodSelect} />
+
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm text-text-secondary mb-1">Date</label>
+          <label className={FIELD_LABEL_CLASS}>Date</label>
           <input name="plan_date" type="date" required defaultValue={defaultDate} />
           {fieldError('plan_date') && (
             <p className="text-xs text-danger mt-1">{fieldError('plan_date')}</p>
           )}
         </div>
         <div>
-          <label className="block text-sm text-text-secondary mb-1">Type</label>
+          <label className={FIELD_LABEL_CLASS}>Type</label>
           <select name="meal_type" defaultValue="breakfast">
             {MEAL_TYPES.map((m) => (
               <option key={m.value} value={m.value}>
@@ -49,8 +77,15 @@ export default function MealForm({ defaultDate }: { defaultDate: string }) {
       </div>
 
       <div>
-        <label className="block text-sm text-text-secondary mb-1">Meal</label>
-        <input name="name" type="text" required placeholder="e.g. Chicken & rice" />
+        <label className={FIELD_LABEL_CLASS}>Meal name</label>
+        <input
+          name="name"
+          type="text"
+          required
+          placeholder="e.g. Chicken & rice"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
         {fieldError('name') && (
           <p className="text-xs text-danger mt-1">{fieldError('name')}</p>
         )}
@@ -58,20 +93,47 @@ export default function MealForm({ defaultDate }: { defaultDate: string }) {
 
       <div className="grid grid-cols-4 gap-2">
         <div>
-          <label className="block text-sm text-text-secondary mb-1">Cal</label>
-          <input name="calories" type="number" min="0" defaultValue={0} />
+          <label className={FIELD_LABEL_CLASS}>Cal</label>
+          <input
+            name="calories"
+            type="number"
+            min="0"
+            value={calories}
+            onChange={(e) => setCalories(e.target.value)}
+          />
         </div>
         <div>
-          <label className="block text-sm text-text-secondary mb-1">P (g)</label>
-          <input name="protein_g" type="number" step="0.1" min="0" defaultValue={0} />
+          <label className={FIELD_LABEL_CLASS}>P (g)</label>
+          <input
+            name="protein_g"
+            type="number"
+            step="0.1"
+            min="0"
+            value={proteinG}
+            onChange={(e) => setProteinG(e.target.value)}
+          />
         </div>
         <div>
-          <label className="block text-sm text-text-secondary mb-1">C (g)</label>
-          <input name="carbs_g" type="number" step="0.1" min="0" defaultValue={0} />
+          <label className={FIELD_LABEL_CLASS}>C (g)</label>
+          <input
+            name="carbs_g"
+            type="number"
+            step="0.1"
+            min="0"
+            value={carbsG}
+            onChange={(e) => setCarbsG(e.target.value)}
+          />
         </div>
         <div>
-          <label className="block text-sm text-text-secondary mb-1">F (g)</label>
-          <input name="fat_g" type="number" step="0.1" min="0" defaultValue={0} />
+          <label className={FIELD_LABEL_CLASS}>F (g)</label>
+          <input
+            name="fat_g"
+            type="number"
+            step="0.1"
+            min="0"
+            value={fatG}
+            onChange={(e) => setFatG(e.target.value)}
+          />
         </div>
       </div>
 
@@ -81,7 +143,7 @@ export default function MealForm({ defaultDate }: { defaultDate: string }) {
       <button
         type="submit"
         disabled={pending}
-        className="w-full py-2.5 rounded-lg bg-gold text-void font-semibold hover:bg-gold-light transition disabled:opacity-50"
+        className={PRIMARY_BUTTON_CLASS}
       >
         {pending ? 'Adding...' : 'Add meal'}
       </button>

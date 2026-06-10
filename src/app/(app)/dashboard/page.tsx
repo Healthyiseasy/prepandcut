@@ -1,5 +1,13 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import {
+  CARD_CLASS,
+  CARD_INTERACTIVE_CLASS,
+  PAGE_SUBTITLE_CLASS,
+  PAGE_TITLE_CLASS,
+  UPPER_LABEL_CLASS,
+  VALUE_TEXT_CLASS,
+} from '@/components/ui/classNames'
 
 interface NextCompetition {
   name: string
@@ -59,64 +67,64 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold mb-1">Dashboard</h1>
-      <p className="text-text-muted text-sm mb-8">
+      <h1 className={PAGE_TITLE_CLASS}>Dashboard</h1>
+      <p className={PAGE_SUBTITLE_CLASS}>
         Welcome back, {user?.user_metadata?.full_name ?? 'athlete'}
       </p>
       <div className="grid grid-cols-2 gap-3">
         <Link
           href="/competition"
-          className="bg-surface rounded-xl p-4 border border-border hover:border-gold/50 transition"
+          className={`${CARD_INTERACTIVE_CLASS} p-4`}
         >
-          <p className="text-text-muted text-xs uppercase tracking-wide mb-1">
+          <p className={`${UPPER_LABEL_CLASS} mb-1`}>
             Next competition
           </p>
           {nextComp ? (
             <>
-              <p className="text-lg font-semibold text-text-primary truncate">
+              <p className={`${VALUE_TEXT_CLASS} truncate`}>
                 {nextComp.name}
               </p>
-              <p className="text-text-muted text-xs mt-0.5">
+              <p className="text-text-secondary text-sm mt-0.5 font-medium">
                 {formatDate(nextComp.competition_date)} · {daysUntil(nextComp.competition_date)} days
               </p>
             </>
           ) : (
-            <p className="text-lg font-semibold text-text-primary">No competition set</p>
+            <p className={VALUE_TEXT_CLASS}>No competition set</p>
           )}
         </Link>
-        <div className="bg-surface rounded-xl p-4 border border-border">
-          <p className="text-text-muted text-xs uppercase tracking-wide mb-1">
+        <div className={`${CARD_CLASS} p-4`}>
+          <p className={`${UPPER_LABEL_CLASS} mb-1`}>
             Target weight
           </p>
-          <p className="text-lg font-semibold text-text-primary">
+          <p className={VALUE_TEXT_CLASS}>
             {nextComp ? `${nextComp.target_weight_lbs} lbs` : '— lbs'}
           </p>
           {nextComp && (
-            <p className="text-text-muted text-xs mt-0.5">
+            <p className="text-text-secondary text-sm mt-0.5 font-medium">
               weigh-in {formatDate(nextComp.weighin_date)}
             </p>
           )}
         </div>
         <Link
           href="/checkin"
-          className="bg-surface rounded-xl p-4 border border-border hover:border-gold/50 transition"
+          className={`${CARD_INTERACTIVE_CLASS} p-4`}
         >
-          <p className="text-text-muted text-xs uppercase tracking-wide mb-1">
+          <p className={`${UPPER_LABEL_CLASS} mb-1`}>
             Today&apos;s check-in
           </p>
           {todaysCheckin ? (
-            <p className="text-lg font-semibold text-success">
+            <p className="text-xl font-bold text-success">
               {currentWeight != null ? `${currentWeight} lbs` : 'Logged'}
             </p>
           ) : (
-            <p className="text-lg font-semibold text-danger">Not logged</p>
+            <p className="text-xl font-bold text-danger">Not logged</p>
           )}
         </Link>
-        <div className="bg-surface rounded-xl p-4 border border-border">
-          <p className="text-text-muted text-xs uppercase tracking-wide mb-1">
+        <div className={`${CARD_CLASS} p-4`}>
+          <p className={`${UPPER_LABEL_CLASS} mb-1`}>
             Water intake
           </p>
-          <p className="text-lg font-semibold text-text-primary">
+          <p className={VALUE_TEXT_CLASS}>
             {todaysCheckin?.water_intake_oz != null
               ? `${todaysCheckin.water_intake_oz} oz`
               : '— oz'}

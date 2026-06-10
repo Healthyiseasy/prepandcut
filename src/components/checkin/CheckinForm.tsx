@@ -2,6 +2,12 @@
 
 import { useActionState, useEffect, useState } from 'react'
 import { saveCheckin, type CheckinFormState } from '@/app/(app)/checkin/actions'
+import {
+  CARD_CLASS,
+  FIELD_LABEL_CLASS,
+  PRIMARY_BUTTON_CLASS,
+  UPPER_LABEL_CLASS,
+} from '@/components/ui/classNames'
 
 export interface CheckinValues {
   morning_weight_lbs?: number | null
@@ -41,7 +47,7 @@ function WeightChange({
   if (current == null || yesterday == null || !Number.isFinite(current)) return null
   const diff = current - yesterday
   if (Math.abs(diff) < 0.05) {
-    return <p className="text-text-muted text-sm mt-2">No change from yesterday</p>
+    return <p className="text-text-secondary text-sm font-medium mt-2">No change from yesterday</p>
   }
   const down = diff < 0
   const sign = down ? '' : '+'
@@ -85,7 +91,7 @@ export default function CheckinForm({
 
   if (mode === 'summary') {
     return (
-      <div className="bg-surface border border-border rounded-xl p-6 text-center">
+      <div className={`${CARD_CLASS} p-6 text-center`}>
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-success/20">
           <svg
             className="h-6 w-6 text-success"
@@ -99,7 +105,7 @@ export default function CheckinForm({
             <path d="M20 6 9 17l-5-5" />
           </svg>
         </div>
-        <p className="text-lg font-semibold text-text-primary">Check-in logged</p>
+        <p className="text-xl font-bold text-text-primary">Check-in logged</p>
         {savedWeight != null && (
           <p className="text-3xl font-bold text-text-primary mt-2">
             {savedWeight} lbs
@@ -110,7 +116,7 @@ export default function CheckinForm({
         </div>
         <button
           onClick={() => setMode('form')}
-          className="mt-4 text-sm text-gold hover:text-gold-light transition"
+          className="mt-4 text-base font-semibold text-gold hover:text-gold-light transition"
         >
           Edit
         </button>
@@ -122,8 +128,8 @@ export default function CheckinForm({
     <form action={formAction} className="space-y-6">
       <input type="hidden" name="checkin_date" value={todayDate} />
 
-      <div className="bg-surface border border-border rounded-xl p-6 text-center">
-        <label className="block text-xs uppercase tracking-wide text-text-muted mb-3">
+      <div className={`${CARD_CLASS} p-6 text-center`}>
+        <label className={`${UPPER_LABEL_CLASS} block mb-3`}>
           Morning weight (lbs)
         </label>
         <input
@@ -147,7 +153,7 @@ export default function CheckinForm({
 
       <div className="grid grid-cols-3 gap-3">
         <div>
-          <label className="block text-xs text-text-secondary mb-1">Water (oz)</label>
+          <label className={FIELD_LABEL_CLASS}>Water (oz)</label>
           <input
             name="water_intake_oz"
             type="number"
@@ -158,7 +164,7 @@ export default function CheckinForm({
           />
         </div>
         <div>
-          <label className="block text-xs text-text-secondary mb-1">Sleep (hrs)</label>
+          <label className={FIELD_LABEL_CLASS}>Sleep (hrs)</label>
           <input
             name="sleep_hours"
             type="number"
@@ -169,7 +175,7 @@ export default function CheckinForm({
           />
         </div>
         <div>
-          <label className="block text-xs text-text-secondary mb-1">Energy 1–10</label>
+          <label className={FIELD_LABEL_CLASS}>Energy 1–10</label>
           <input
             name="energy_level"
             type="number"
@@ -181,21 +187,21 @@ export default function CheckinForm({
         </div>
       </div>
 
-      <div className="border border-border rounded-xl overflow-hidden">
+      <div className="border-2 border-text-muted/40 rounded-xl overflow-hidden">
         <button
           type="button"
           onClick={() => setShowDetails((s) => !s)}
-          className="w-full flex items-center justify-between px-4 py-3 text-sm text-text-secondary hover:text-text-primary transition"
+          className="w-full flex items-center justify-between px-4 py-3 text-base font-semibold text-text-secondary hover:text-text-primary transition"
         >
           <span>More details</span>
-          <span className="text-text-muted">{showDetails ? '−' : '+'}</span>
+          <span className="text-text-secondary">{showDetails ? '−' : '+'}</span>
         </button>
 
         {showDetails && (
           <div className="px-4 pb-4 space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-text-secondary mb-1">
+                <label className={FIELD_LABEL_CLASS}>
                   Sleep quality 1–10
                 </label>
                 <input
@@ -208,7 +214,7 @@ export default function CheckinForm({
                 />
               </div>
               <div>
-                <label className="block text-xs text-text-secondary mb-1">
+                <label className={FIELD_LABEL_CLASS}>
                   Training 1–10
                 </label>
                 <input
@@ -221,7 +227,7 @@ export default function CheckinForm({
                 />
               </div>
               <div>
-                <label className="block text-xs text-text-secondary mb-1">Calories</label>
+                <label className={FIELD_LABEL_CLASS}>Calories</label>
                 <input
                   name="calories_consumed"
                   type="number"
@@ -231,7 +237,7 @@ export default function CheckinForm({
                 />
               </div>
               <div>
-                <label className="block text-xs text-text-secondary mb-1">Sodium (mg)</label>
+                <label className={FIELD_LABEL_CLASS}>Sodium (mg)</label>
                 <input
                   name="sodium_mg"
                   type="number"
@@ -241,7 +247,7 @@ export default function CheckinForm({
                 />
               </div>
               <div>
-                <label className="block text-xs text-text-secondary mb-1">Protein (g)</label>
+                <label className={FIELD_LABEL_CLASS}>Protein (g)</label>
                 <input
                   name="protein_g"
                   type="number"
@@ -252,7 +258,7 @@ export default function CheckinForm({
                 />
               </div>
               <div>
-                <label className="block text-xs text-text-secondary mb-1">Carbs (g)</label>
+                <label className={FIELD_LABEL_CLASS}>Carbs (g)</label>
                 <input
                   name="carbs_g"
                   type="number"
@@ -263,7 +269,7 @@ export default function CheckinForm({
                 />
               </div>
               <div>
-                <label className="block text-xs text-text-secondary mb-1">Fat (g)</label>
+                <label className={FIELD_LABEL_CLASS}>Fat (g)</label>
                 <input
                   name="fat_g"
                   type="number"
@@ -274,7 +280,7 @@ export default function CheckinForm({
                 />
               </div>
               <div>
-                <label className="block text-xs text-text-secondary mb-1">Fiber (g)</label>
+                <label className={FIELD_LABEL_CLASS}>Fiber (g)</label>
                 <input
                   name="fiber_g"
                   type="number"
@@ -285,7 +291,7 @@ export default function CheckinForm({
                 />
               </div>
               <div className="col-span-2">
-                <label className="block text-xs text-text-secondary mb-1">
+                <label className={FIELD_LABEL_CLASS}>
                   Evening weight (lbs)
                 </label>
                 <input
@@ -299,7 +305,7 @@ export default function CheckinForm({
               </div>
             </div>
             <div>
-              <label className="block text-xs text-text-secondary mb-1">Notes</label>
+              <label className={FIELD_LABEL_CLASS}>Notes</label>
               <textarea
                 name="notes"
                 rows={3}
@@ -316,7 +322,7 @@ export default function CheckinForm({
       <button
         type="submit"
         disabled={pending}
-        className="w-full py-3 rounded-lg bg-gold text-void font-semibold hover:bg-gold-light transition disabled:opacity-50"
+        className={PRIMARY_BUTTON_CLASS}
       >
         {pending ? 'Logging...' : 'Log check-in'}
       </button>
